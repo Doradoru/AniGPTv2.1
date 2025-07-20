@@ -29,7 +29,7 @@ def login_user(name, password):
     users_ws = sheet.worksheet("Users")
     users = users_ws.get_all_records()
     for user in users:
-        if not isinstance(user, dict):   # कठोर चेक
+        if not isinstance(user, dict):
             continue
         u_name = user.get("Name", "").strip().lower()
         u_pass = user.get("Password", "").strip()
@@ -42,11 +42,10 @@ def register_user(name, password):
     users_ws = sheet.worksheet("Users")
     users = users_ws.get_all_records()
     for user in users:
-        if not isinstance(user, dict):   # कठोर चेक
+        if not isinstance(user, dict):
             continue
         if user.get("Name", "").strip().lower() == name.strip().lower():
             return False  # already exists
-
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     users_ws.append_row([name.strip(), password.strip(), created_at])
     return True
