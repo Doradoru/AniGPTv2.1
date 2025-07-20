@@ -5,30 +5,29 @@ st.set_page_config(page_title="AniGPT v2.1 Login", page_icon="🧠")
 
 st.title("🧠 AniGPT v2.1 Login Portal")
 
-menu = ["Login", "Register"]
-choice = st.sidebar.selectbox("Menu", menu)
+menu = st.sidebar.selectbox("Menu", ["Login", "Register"])
 
-if choice == "Login":
+if menu == "Login":
     st.subheader("🔐 Login to AniGPT")
-
     uname = st.text_input("Username")
     upass = st.text_input("Password", type='password')
 
     if st.button("Login"):
-        if login_user(uname, upass):
-            st.success(f"Welcome {uname} 👋")
-            st.info("Now you can start using AniGPT...")
+        success = login_user(uname, upass)
+        if success:
+            st.success(f"Welcome back, {uname} 👋")
+            st.session_state['user'] = uname
         else:
             st.error("Invalid credentials")
 
-elif choice == "Register":
-    st.subheader("📝 Create New Account")
-
-    new_user = st.text_input("New Username")
-    new_pass = st.text_input("New Password", type='password')
+elif menu == "Register":
+    st.subheader("📝 Register New User")
+    new_user = st.text_input("Create Username")
+    new_pass = st.text_input("Create Password", type='password')
 
     if st.button("Register"):
-        if register_user(new_user, new_pass):
-            st.success("Account created successfully!")
+        registered = register_user(new_user, new_pass)
+        if registered:
+            st.success("🎉 Registration successful! Please login.")
         else:
-            st.warning("Username already exists!")
+            st.warning("⚠️ Username already exists. Try a different one.")
