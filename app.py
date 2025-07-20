@@ -7,8 +7,7 @@ from google.oauth2.service_account import Credentials
 st.title("🧠 AniGPT v2.1 Sheet Test")
 
 try:
-scope = ["https://www.googleapis.com/auth/spreadsheets",
-         "https://www.googleapis.com/auth/drive"]
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
 
     data = json.loads(st.secrets["GOOGLE_SHEET_JSON"])
 
