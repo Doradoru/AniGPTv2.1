@@ -28,8 +28,9 @@ def login_user(name, password):
     ensure_users_tab()
     users_ws = sheet.worksheet("Users")
     users = users_ws.get_all_records()
-
     for user in users:
+        if not isinstance(user, dict):   # कठोर चेक
+            continue
         u_name = user.get("Name", "").strip().lower()
         u_pass = user.get("Password", "").strip()
         if u_name == name.strip().lower() and u_pass == password.strip():
@@ -40,8 +41,9 @@ def register_user(name, password):
     ensure_users_tab()
     users_ws = sheet.worksheet("Users")
     users = users_ws.get_all_records()
-
     for user in users:
+        if not isinstance(user, dict):   # कठोर चेक
+            continue
         if user.get("Name", "").strip().lower() == name.strip().lower():
             return False  # already exists
 
