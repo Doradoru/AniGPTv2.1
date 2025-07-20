@@ -1,19 +1,18 @@
 import streamlit as st
+import speech_recognition as sr
 from datetime import datetime
-import json
 import gspread
+import json
 from google.oauth2.service_account import Credentials
 
-# Load credentials
+# Load creds
 data = json.loads(st.secrets["GOOGLE_SHEET_JSON"])
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_info(data, scopes=scope)
 client = gspread.authorize(creds)
-
-# Open your sheet
 sheet = client.open("AniGPT_DB")
 
-# --- Ensure Tabs Exist ---
+# Ensure Tabs
 required_tabs = {
     "Mood logs": ["Date", "Mood", "Trigger"],
     "Daily journal": ["Date", "Summary", "Keywords"],
@@ -39,18 +38,18 @@ def ensure_tabs():
 
 ensure_tabs()
 
-# --- Intent Detection (Simple Rule-Based) ---
+# Detect intent
 def detect_intent(text):
     text = text.lower()
     if any(x in text for x in ["happy", "sad", "angry", "mood"]):
         return "Mood logs"
-    elif "learn" in text or "today i learned" in text:
+    elif "learn" in text:
         return "Learning"
-    elif "journal" in text or "diary" in text or "today was" in text:
+    elif "journal" in text or "today was" in text:
         return "Daily journal"
-    elif "remind" in text or "to do" in text or "task" in text:
+    elif "remind" in text or "task" in text:
         return "Reminders"
-    elif "goal" in text or "future" in text:
+    elif "goal" in text:
         return "Life goals"
     elif "quote" in text:
         return "Quotes"
@@ -58,10 +57,12 @@ def detect_intent(text):
         return "Improvement notes"
     elif "fact" in text:
         return "User facts"
+    elif "done" in text:
+        return "Task done"
     else:
         return "Memory"
 
-# --- Save to Sheet Based on Intent ---
+# Save data
 def save_to_sheet(intent, user_input):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ws = sheet.worksheet(intent)
@@ -84,20 +85,39 @@ def save_to_sheet(intent, user_input):
         ws.append_row([user_input, "Context TBD"])
     elif intent == "Task done":
         ws.append_row([user_input, now])
+    elif intent == "Voice logs":
+        ws.append_row([now, user_input, "Unknown"])
     else:
         ws.append_row([now, user_input])
 
-# --- UI ---
-st.title("🧠 AniGPT v2.1")
-st.write("Talk to your assistant, save thoughts, tasks, and progress.")
+# UI
+st.title("🎙️ AniGPT v2.1 with Voice Input")
+st.write("Talk or type to AniGPT, and it will save everything smartly.")
 
-user_input = st.text_area("What's on your mind?", height=150)
+user_input = st.text_area("Type here if you prefer:")
 
-if st.button("Send"):
+# 🎙 Voice input
+if st.button("🎤 Speak"):
+    recognizer = sr.Recognizer()
+    mic = sr.Microphone()
+    with mic as source:
+        st.info("Listening...")
+        audio = recognizer.listen(source)
+    try:
+        text = recognizer.recognize_google(audio)
+        st.success(f"You said: {text}")
+        detected = detect_intent(text)
+        save_to_sheet(detected, text)
+        save_to_sheet("Voice logs", text)
+        st.success(f"✅ Saved to **{detected}** and Voice logs.")
+    except Exception as e:
+        st.error("Could not recognize voice. Please try again.")
+
+# Manual input handling
+if st.button("📥 Submit"):
     if user_input.strip():
         intent = detect_intent(user_input)
         save_to_sheet(intent, user_input)
         st.success(f"✅ Saved to **{intent}** tab.")
     else:
-        st.warning("Please type something before sending.")
-
+        st.warning("Please type something before submitting.")
