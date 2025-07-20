@@ -29,10 +29,14 @@ def login_user(name, password):
     users_ws = sheet.worksheet("Users")
     users = users_ws.get_all_records()
     for user in users:
+        # Fix: ignore anything that's not a dict or without essential keys
         if not isinstance(user, dict):
             continue
-        u_name = user.get("Name", "").strip().lower()
-        u_pass = user.get("Password", "").strip()
+        # Sometimes get_all_records() returns empty dicts if the row is blank
+        if not user.get("Name") or not user.get("Password"):
+            continue
+        u_name = str(user.get("Name", "")).strip().lower()
+        u_pass = str(user.get("Password", "")).strip()
         if u_name == name.strip().lower() and u_pass == password.strip():
             return True
     return False
@@ -41,11 +45,14 @@ def register_user(name, password):
     ensure_users_tab()
     users_ws = sheet.worksheet("Users")
     users = users_ws.get_all_records()
+    name = name.strip()
     for user in users:
         if not isinstance(user, dict):
             continue
-        if user.get("Name", "").strip().lower() == name.strip().lower():
+        if not user.get("Name"):
+            continue
+        if str(user.get("Name", "")).strip().lower() == name.lower():
             return False  # already exists
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    users_ws.append_row([name.strip(), password.strip(), created_at])
+    users_ws.append_row([name, password.strip(), created_at])
     return True
