@@ -31,7 +31,7 @@ def login_user(name, password):
 
     for user in users:
         u_name = user.get("Name", "").strip().lower()
-        u_pass = user.get("Password", "").strip()
+        u_pass = (user.get("Password", "") or "") .strip()
         if u_name == name.strip().lower() and u_pass == password.strip():
             return True
     return False
