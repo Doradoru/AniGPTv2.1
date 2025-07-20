@@ -4,55 +4,50 @@ from datetime import datetime
 import streamlit as st
 import json
 
-# Load credentials from Streamlit secrets
+# Load credentials from secrets
 data = json.loads(st.secrets["GOOGLE_SHEET_JSON"])
 
-scope = ["https://www.googleapis.com/auth/spreadsheets",
-         "https://www.googleapis.com/auth/drive"]
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 
 creds = Credentials.from_service_account_info(data, scopes=scope)
 client = gspread.authorize(creds)
 
-# Open your sheet
-sheet = client.open("AniGPT_DB")
+# Connect to your sheet
+sheet = client.open("AniGPT_DB")  # Make sure this matches your sheet name
 
 def ensure_users_tab():
     try:
         sheet.worksheet("Users")
     except gspread.WorksheetNotFound:
-        sheet.add_worksheet(title="Users", rows="100", cols="5")
-        ws = sheet.worksheet("Users")
+        ws = sheet.add_worksheet(title="Users", rows="100", cols="3")
         ws.append_row(["Name", "Password", "CreatedAt"])
 
 def login_user(name, password):
     ensure_users_tab()
-    users_ws = sheet.worksheet("Users")
-    users = users_ws.get_all_records()
+    ws = sheet.worksheet("Users")
+    users = ws.get_all_records()
+    name = name.strip().lower()
+    password = password.strip()
     for user in users:
-        # Fix: ignore anything that's not a dict or without essential keys
         if not isinstance(user, dict):
             continue
-        # Sometimes get_all_records() returns empty dicts if the row is blank
-        if not user.get("Name") or not user.get("Password"):
-            continue
-        u_name = str(user.get("Name", "")).strip().lower()
-        u_pass = str(user.get("Password", "")).strip()
-        if u_name == name.strip().lower() and u_pass == password.strip():
+        if str(user.get("Name", "")).strip().lower() == name and str(user.get("Password", "")).strip() == password:
             return True
     return False
 
 def register_user(name, password):
     ensure_users_tab()
-    users_ws = sheet.worksheet("Users")
-    users = users_ws.get_all_records()
+    ws = sheet.worksheet("Users")
+    users = ws.get_all_records()
     name = name.strip()
     for user in users:
         if not isinstance(user, dict):
             continue
-        if not user.get("Name"):
-            continue
         if str(user.get("Name", "")).strip().lower() == name.lower():
-            return False  # already exists
+            return False  # already registered
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    users_ws.append_row([name, password.strip(), created_at])
+    ws.append_row([name, password.strip(), created_at])
     return True
