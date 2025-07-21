@@ -26,7 +26,7 @@ if not st.session_state.logged_in:
                 st.session_state.logged_in = True
                 st.session_state.user = uname
                 st.success(f"Welcome back, {uname} 👋")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Login Failed. Please check your credentials.")
 
@@ -46,4 +46,4 @@ else:
     if st.button("🚪 Logout"):
         st.session_state.logged_in = False
         st.session_state.user = ""
-        st.experimental_rerun()
+        st.rerun()
