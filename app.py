@@ -1,6 +1,7 @@
 import streamlit as st
 from utils import login_user, register_user
 
+# Set Streamlit Page Title
 st.set_page_config(page_title="AniGPT Login", page_icon="🧠")
 
 # Initialize session state
@@ -8,42 +9,51 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = ""
 
-st.title("🧠 AniGPT v2.1 Login System")
+# Main Title
+st.markdown("<h1 style='color:#FF4B4B;'>🧠 Welcome to AniGPT v2.1</h1>", unsafe_allow_html=True)
+st.write("___")
 
-# If not logged in
+# If user is not logged in
 if not st.session_state.logged_in:
-    st.markdown("### 👤 Login or Create Account")
+    st.subheader("🔐 Login or Create Account")
 
-    menu = ["Login", "Register"]
-    choice = st.selectbox("Select Action", menu)
+    choice = st.radio("Choose action:", ["🔓 Login", "🆕 Register"], horizontal=True)
 
-    uname = st.text_input("Username")
-    upass = st.text_input("Password", type="password")
+    uname = st.text_input("👤 Username")
+    upass = st.text_input("🔑 Password", type="password")
 
-    if choice == "Login":
-        if st.button("Login"):
+    if choice == "🔓 Login":
+        if st.button("🚀 Login Now"):
             if login_user(uname, upass):
                 st.session_state.logged_in = True
                 st.session_state.user = uname
-                st.success(f"Welcome back, {uname} 👋")
-                st.rerun()
+                st.success(f"🎉 Welcome back, **{uname}** 👋")
+                st.experimental_rerun()
             else:
-                st.error("Login Failed. Please check your credentials.")
+                st.error("❌ Login failed. Please check your credentials.")
 
-    elif choice == "Register":
-        if st.button("Register"):
+    elif choice == "🆕 Register":
+        if st.button("✅ Create Account"):
             if register_user(uname, upass):
-                st.success("Registration Successful! Now you can login.")
+                st.success("✅ Registration successful! Now you can login.")
             else:
-                st.warning("User already exists. Please try a different name.")
+                st.warning("⚠️ Username already exists. Try another.")
 
 # If already logged in
 else:
-    st.success(f"🟢 Logged in as {st.session_state.user}")
-    st.markdown("### 🎯 What do you want to do today?")
-    st.write("✅ Mood log, 📝 Journal, 📚 Learnings, 🗓️ Goals — coming soon...")
+    st.success(f"🟢 You are logged in as **{st.session_state.user}**")
 
+    st.markdown("---")
+    st.subheader("🎯 What do you want to do today?")
+    st.markdown("📝 *Soon you’ll be able to:*")
+    st.markdown("- Track your mood daily 😊😔😡")
+    st.markdown("- Write your journal 📓")
+    st.markdown("- Save your learnings 📚")
+    st.markdown("- Set life goals 🎯")
+    st.markdown("- And much more powered by AniGPT 🚀")
+
+    st.markdown("---")
     if st.button("🚪 Logout"):
         st.session_state.logged_in = False
         st.session_state.user = ""
-        st.rerun()
+        st.experimental_rerun()
