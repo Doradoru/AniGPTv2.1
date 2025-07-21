@@ -1,32 +1,49 @@
-### ✅ FILE: app.py (Main Login/Register)
-
 import streamlit as st
 from utils import login_user, register_user
 
 st.set_page_config(page_title="AniGPT Login", page_icon="🧠")
-st.title("🧠 AniGPT v2.1 Login")
 
-menu = ["Login", "Register"]
-choice = st.sidebar.selectbox("Menu", menu)
+# Initialize session state
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.user = ""
 
-if choice == "Login":
-    st.subheader("Login to your Account")
+st.title("🧠 AniGPT v2.1 Login System")
+
+# If not logged in
+if not st.session_state.logged_in:
+    st.markdown("### 👤 Login or Create Account")
+
+    menu = ["Login", "Register"]
+    choice = st.selectbox("Select Action", menu)
+
     uname = st.text_input("Username")
-    upass = st.text_input("Password", type='password')
-    if st.button("Login"):
-        if login_user(uname, upass):
-            st.session_state['user'] = uname
-            st.success(f"Welcome back, {uname} 👋")
-            st.switch_page("pages/dashboard.py")
-        else:
-            st.error("Incorrect Username or Password")
+    upass = st.text_input("Password", type="password")
 
-elif choice == "Register":
-    st.subheader("Create New Account")
-    new_user = st.text_input("Choose a Username")
-    new_pass = st.text_input("Choose a Password", type='password')
-    if st.button("Register"):
-        if register_user(new_user, new_pass):
-            st.success("Account created successfully. Now login.")
-        else:
-            st.warning("Username already exists. Try a different one.")
+    if choice == "Login":
+        if st.button("Login"):
+            if login_user(uname, upass):
+                st.session_state.logged_in = True
+                st.session_state.user = uname
+                st.success(f"Welcome back, {uname} 👋")
+                st.experimental_rerun()
+            else:
+                st.error("Login Failed. Please check your credentials.")
+
+    elif choice == "Register":
+        if st.button("Register"):
+            if register_user(uname, upass):
+                st.success("Registration Successful! Now you can login.")
+            else:
+                st.warning("User already exists. Please try a different name.")
+
+# If already logged in
+else:
+    st.success(f"🟢 Logged in as {st.session_state.user}")
+    st.markdown("### 🎯 What do you want to do today?")
+    st.write("✅ Mood log, 📝 Journal, 📚 Learnings, 🗓️ Goals — coming soon...")
+
+    if st.button("🚪 Logout"):
+        st.session_state.logged_in = False
+        st.session_state.user = ""
+        st.experimental_rerun()
