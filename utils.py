@@ -4,7 +4,7 @@ from datetime import datetime
 import streamlit as st
 import json
 
-# Load credentials from Streamlit secrets
+# Load credentials from Streamlit secrets 
 data = json.loads(st.secrets["GOOGLE_SHEET_JSON"])
 
 scope = [
