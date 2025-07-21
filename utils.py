@@ -1,34 +1,54 @@
-import speech_recognition as sr
+import gspread
+from google.oauth2.service_account import Credentials
+from datetime import datetime
+import streamlit as st
+import json
 
-# List all available microphone devices, helpful if multiple mics are attached
-print("Available microphones:")
-for idx, name in enumerate(sr.Microphone.list_microphone_names()):
-    print(f"{idx}: {name}")
+# Load credentials from Streamlit secrets
+data = json.loads(st.secrets["GOOGLE_SHEET_JSON"])
 
-# ------- Select your mic here (default: first working mic) --------
-# Set your desired mic index (default is 0 if you are not sure)
-MIC_INDEX = 0
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 
-try:
-    mic = sr.Microphone(device_index=MIC_INDEX)
-except OSError:
-    print("Mic NOT found or unavailable! Check connection and drivers.")
-    exit()
+creds = Credentials.from_service_account_info(data, scopes=scope)
+client = gspread.authorize(creds)
+sheet = client.open("AniGPT_DB")  # ✅ Sheet name
 
-r = sr.Recognizer()
+# Ensure Users tab exists
+def ensure_users_tab():
+    try:
+        sheet.worksheet("Users")
+    except gspread.WorksheetNotFound:
+        sheet.add_worksheet(title="Users", rows="100", cols="5")
+        ws = sheet.worksheet("Users")
+        ws.append_row(["Name", "Password", "CreatedAt"])
 
-with mic as source:
-    print("Adjusting for ambient noise... Please remain silent.")
-    r.adjust_for_ambient_noise(source, duration=1)  # helps with noisy background
+# Login
+def login_user(name, password):
+    ensure_users_tab()
+    users_ws = sheet.worksheet("Users")
+    users = users_ws.get_all_records()
+    for user in users:
+        if not isinstance(user, dict):
+            continue
+        if not user.get("Name") or not user.get("Password"):
+            continue
+        if str(user["Name"]).strip().lower() == name.strip().lower() and str(user["Password"]).strip() == password.strip():
+            return True
+    return False
 
-    print("Say something!")
-    audio = r.listen(source)
-
-try:
-    # Recognize using Google Web Speech API (default, requires Internet)
-    text = r.recognize_google(audio, language='en-IN')  # choose 'en-IN' for Hindi English, 'en-US' for US English
-    print("You said:", text)
-except sr.UnknownValueError:
-    print("Sorry, couldn't understand your speech.")
-except sr.RequestError as e:
-    print("Could not request results; check your Internet connection.", e)
+# Register
+def register_user(name, password):
+    ensure_users_tab()
+    users_ws = sheet.worksheet("Users")
+    users = users_ws.get_all_records()
+    for user in users:
+        if not isinstance(user, dict):
+            continue
+        if str(user.get("Name", "")).strip().lower() == name.strip().lower():
+            return False
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    users_ws.append_row([name.strip(), password.strip(), created_at])
+    return True
